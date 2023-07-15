@@ -1,11 +1,9 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, Alert} from 'react-native';
+import { useEffect } from 'react';
+import { StyleSheet, Text, View, Alert } from 'react-native';
 import messaging from '@react-native-firebase/messaging';
-import React, { useEffect } from 'react';
-
 export default function App() {
-
-  const requestUserPermission = async () =>{
+  async function requestUserPermission() {
     const authStatus = await messaging().requestPermission();
     const enabled =
       authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
@@ -14,18 +12,17 @@ export default function App() {
     if (enabled) {
       console.log('Authorization status:', authStatus);
     }
-  } 
+  }
 
-  useEffect (()=>{
-    if(requestUserPermission()){
-
-      // return fcm token the device 
-      messaging().getToken().then(token =>{
-        console.log("token !")
-      });
-    }
-    else{
-      console.log('Failed token status', authStatus);
+  useEffect(() => {
+    if (requestUserPermission) {
+      messaging()
+        .getToken()
+        .then((token) => {
+          console.log(token);
+        });
+    } else {
+      console.log('failed token status', authStatus);
     }
 
     // Check whether an initial notification is available
@@ -35,36 +32,38 @@ export default function App() {
         if (remoteMessage) {
           console.log(
             'Notification caused app to open from quit state:',
-            remoteMessage.notification,
+            remoteMessage.notification
           );
         }
-    });
+      });
 
     // Assume a message-notification contains a "type" property in the data payload of the screen to open
-    messaging().onNotificationOpenedApp(async remoteMessage => {
+    messaging().onNotificationOpenedApp(async (remoteMessage) => {
       console.log(
         'Notification caused app to open from background state:',
-        remoteMessage.notification,
+        remoteMessage.notification
       );
+      Alert.alert('A new FCM message arrived!', JSON.stringify(remoteMessage));
     });
 
     // Register background handler
-    messaging().setBackgroundMessageHandler(async remoteMessage => {
-      console.log('Message handled in the background!', remoteMessage);
+    messaging().setBackgroundMessageHandler(async (remoteMessage) => {
+      Alert.alert('A new FCM message arrived!', JSON.stringify(remoteMessage));
     });
 
-    const unsubscribe = messaging().onMessage(async remoteMessage => {
+    const unsubscribe = messaging().onMessage(async (remoteMessage) => {
+      console.log(
+        'unsubscribe ~ remoteMessage:',
+        remoteMessage
+      );
       Alert.alert('A new FCM message arrived!', JSON.stringify(remoteMessage));
     });
 
     return unsubscribe;
-
-
-  }, [])
-
+  }, []);
   return (
     <View style={styles.container}>
-      <Text>FCM Tutorials</Text>
+      <Text>FCM Tutorial </Text>
       <StatusBar style="auto" />
     </View>
   );
